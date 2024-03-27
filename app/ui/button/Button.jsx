@@ -1,54 +1,100 @@
-/* eslint-disable react/no-unknown-property */
-import PropTypes from 'prop-types';
-import './button.css';
+import { Icon } from '@/app/ui/icon';
+import { Loader } from '@/app/ui/loader';
+import { Transition } from '@/app/ui/transition';
+import { Link } from 'next/link';
+import { forwardRef } from 'react';
+import { classes } from '@/app/utils/style';
+import styles from './button.module.css';
 
-/**
- * Primary UI component for user interaction
- */
-export const Button = ({ primary, backgroundColor, size, label, ...props }) => {
-  const mode = primary ? 'storybook-button--primary' : 'storybook-button--secondary';
+function isExternalLink(href) {
+  return href?.includes('://');
+}
+
+export const Button = forwardRef(({ href, ...rest }, ref) => {
+  if (isExternalLink(href) || !href) {
+    return <ButtonContent href={href} ref={ref} {...rest} />;
+  }
+
   return (
-    <button
-      type="button"
-      className={['storybook-button', `storybook-button--${size}`, mode].join(' ')}
-      {...props}
-    >
-      {label}
-      <style jsx>{`
-        button {
-          background-color: ${backgroundColor};
-        }
-      `}</style>
-    </button>
+    <ButtonContent
+      unstable_viewTransition
+      as={Link}
+      prefetch="intent"
+      to={href}
+      ref={ref}
+      {...rest}
+    />
   );
-};
+});
 
-Button.propTypes = {
-  /**
-   * Is this the principal call to action on the page?
-   */
-  primary: PropTypes.bool,
-  /**
-   * What background color to use
-   */
-  backgroundColor: PropTypes.string,
-  /**
-   * How large should the button be?
-   */
-  size: PropTypes.oneOf(['small', 'medium', 'large']),
-  /**
-   * Button contents
-   */
-  label: PropTypes.string.isRequired,
-  /**
-   * Optional click handler
-   */
-  onClick: PropTypes.func,
-};
+const ButtonContent = forwardRef(
+  (
+    {
+      className,
+      as,
+      secondary,
+      loading,
+      loadingText = 'loading',
+      icon,
+      iconEnd,
+      iconHoverShift,
+      iconOnly,
+      children,
+      rel,
+      target,
+      href,
+      disabled,
+      ...rest
+    },
+    ref
+  ) => {
+    const isExternal = isExternalLink(href);
+    const defaultComponent = href ? 'a' : 'button';
+    const Component = as || defaultComponent;
 
-Button.defaultProps = {
-  backgroundColor: null,
-  primary: false,
-  size: 'medium',
-  onClick: undefined,
-};
+    return (
+      <Component
+        className={classes(styles.button, className)}
+        data-loading={loading}
+        data-icon-only={iconOnly}
+        data-secondary={secondary}
+        data-icon={icon}
+        href={href}
+        rel={rel || isExternal ? 'noopener noreferrer' : undefined}
+        target={target || isExternal ? '_blank' : undefined}
+        disabled={disabled}
+        ref={ref}
+        {...rest}
+      >
+        {!!icon && (
+          <Icon
+            className={styles.icon}
+            data-start={!iconOnly}
+            data-shift={iconHoverShift}
+            icon={icon}
+          />
+        )}
+        {!!children && <span className={styles.text}>{children}</span>}
+        {!!iconEnd && (
+          <Icon
+            className={styles.icon}
+            data-end={!iconOnly}
+            data-shift={iconHoverShift}
+            icon={iconEnd}
+          />
+        )}
+        <Transition unmount in={loading}>
+          {({ visible, nodeRef }) => (
+            <Loader
+              ref={nodeRef}
+              className={styles.loader}
+              size={32}
+              text={loadingText}
+              data-visible={visible}
+            />
+          )}
+        </Transition>
+      </Component>
+    );
+  }
+);

@@ -20,8 +20,25 @@ const nextConfig = {
         resourceQuery: { not: [...fileLoaderRule.resourceQuery.not, /url/] }, // exclude if *.svg?url
         use: ['@svgr/webpack'],
       },
+      
     );
-
+    config.module.rules.push({
+        test: /\.(glb|gltf)$/,
+          use:
+            [
+                {
+                    loader: 'file-loader',
+                    options: {
+                      esModule: false, // Es importante configurar esto como false
+                    },
+                    // options: {
+                    //    publicPath: "/assets",
+                      
+                    //   name: '[name].[ext]',
+                    // }
+                 }
+            ]
+      });
     // Modify the file loader rule to ignore *.svg, since we have it handled now.
     fileLoaderRule.exclude = /\.svg$/i;
 

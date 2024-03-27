@@ -1,11 +1,12 @@
 import { useReducedMotion } from 'framer-motion';
-import { useLocation, useNavigate } from '@remix-run/react';
+import { useRouter} from 'next/router';
 import { useCallback, useRef } from 'react';
 
 export function useScrollToHash() {
   const scrollTimeout = useRef();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const router = useRouter();
+  // const location = useLocation();
+  // const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
 
   const scrollToHash = useCallback(
@@ -21,9 +22,9 @@ export function useScrollToHash() {
         scrollTimeout.current = setTimeout(() => {
           window.removeEventListener('scroll', handleScroll);
 
-          if (window.location.pathname === location.pathname) {
+            if (router.asPath === window.location.pathname) {
             onDone?.();
-            navigate(`${location.pathname}#${id}`, { scroll: false });
+            router.push(`${window.location.pathname}#${id}`, undefined, { scroll: false });
           }
         }, 50);
       };
@@ -35,7 +36,7 @@ export function useScrollToHash() {
         clearTimeout(scrollTimeout.current);
       };
     },
-    [navigate, reduceMotion, location.pathname]
+    [router, reduceMotion]
   );
 
   return scrollToHash;
